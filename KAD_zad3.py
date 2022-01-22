@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.random.mtrand import rand
 
-rand2 = np.random.RandomState(0)
+rand2 = np.random.RandomState(2)
 
 
 def get_random_point(center: Tuple[float, float], radius: float) -> Tuple[float, float]:
@@ -27,28 +27,40 @@ df_only_one_circle = pd.DataFrame(list_only_one_circle)
 
 list_first_circle = [get_random_point((-5, 0), 3) for x in range(100)]
 list_second_circle = [get_random_point((5, 0), 3) for x in range(100)]
-list_third_circle = [get_random_point((0, 5), 3) for x in range(200)]
+# list_third_circle = [get_random_point((0, 5), 3) for x in range(200)]
 
 df_fist_circle = pd.DataFrame(list_first_circle)
 df_second_circle = pd.DataFrame(list_second_circle)
-df_third_circle = pd.DataFrame(list_third_circle)
+# df_third_circle = pd.DataFrame(list_third_circle)
 
 df_two_combined = df_fist_circle.append(df_second_circle)
-df_three_combined = df_two_combined.append(df_third_circle)
+# df_three_combined = df_two_combined.append(df_third_circle)
+
 
 # tutaj zmieniamy liczbe neuronow (w range)
-neurons = [get_random_point([0, 0], 2) for x in range(10)]
+neurons = [get_random_point((0, 0), 6) for x in range(30)]
 df_neurons = pd.DataFrame(neurons)
 
 
-# zwraca index BMU
+# neurons = []
+#
+# for costam in range(20):
+#     neurons = df_two_combined.sample()
 
+# neurons2 = [get_random_point([5, 0], 3) for x in range(10)]
+# df_neurons2 = pd.DataFrame(neurons2)
+# df_neurons = df_neurons1.append(df_neurons2)
+
+
+# Return index of the BMU in the grid
 def find_BMU_my_second_version(SOM, elem):
     min_index = 0
+    # ODLEGLOSC EUKLIDESOWA
     first_result = sqrt(((SOM[0][0] - elem[0]) ** 2)
                         + ((SOM[1][0]) - elem[1]) ** 2)
     for i in range(len(SOM)):
         f = sqrt(((SOM[0][i] - elem[0]) ** 2) + ((SOM[1][i]) - elem[1]) ** 2)
+        # print(f)
         if f < first_result:
             first_result = f
             min_index = i
@@ -56,74 +68,107 @@ def find_BMU_my_second_version(SOM, elem):
 
 
 def update_weights(SOM, train_ex, learn_rate, radius_sq,
-                   BMU_coord):
-
-    # jak promien sasiedztwa jest bardzo maly, to porusz tylko BMU
+                   BMU_index):
+    # if radius is close to zero then only BMU is changed
     if radius_sq < 1e-3:
-        SOM.iloc[BMU_coord] += learn_rate * (train_ex - SOM.iloc[BMU_coord])
+        SOM.iloc[BMU_index] += learn_rate * (train_ex - SOM.iloc[BMU_index])
         return SOM
-    # zmien wagi wszystkich neuronow w zasiagu promienia sasiedztwa
+
+    # Change all cells in a small neighborhood of BMU
     for neuron in range(len(SOM)):
-        dist_sq = sqrt(((SOM[0][neuron] - SOM[0][BMU_coord]) ** 2)
-                       + ((SOM[1][neuron]) - SOM[1][BMU_coord]) ** 2)
+        # TODO dodaj ifa, ktory sprawdza, czy neuron jest sasiadem
+        dist_sq = sqrt(((SOM[0][neuron] - SOM[0][BMU_index]) ** 2)
+                       + ((SOM[1][neuron]) - SOM[1][BMU_index]) ** 2)
         dist_func = np.exp(-dist_sq / 2 / radius_sq)
         SOM.iloc[neuron] += learn_rate * dist_func * (train_ex - SOM.iloc[neuron])
 
     return SOM
 
 
-def train_SOM(SOM, train_data, learn_rate=.1, radius_sq=.3,
+# Main routine for training an SOM. It requires an initialized SOM grid
+# or a partially trained grid as parameter
+def train_SOM(SOM, train_data, learn_rate=.1, radius_sq=.1,
               lr_decay=.1, radius_decay=.1, epochs=10):
     learn_rate_0 = learn_rate
     radius_0 = radius_sq
     for epoch in np.arange(0, epochs):
+        # shuffle train_data
         train_data = train_data.sample(frac=1)
         for cell in range(len(train_data)):
+            # dostac sie do wiersza o indeksie [cell]
             one_row = train_data.iloc[cell]
             index = find_BMU_my_second_version(SOM, one_row)
             SOM = update_weights(SOM, one_row,
                                  learn_rate, radius_sq, index)
 
-        # zaaktualizuj learing rate i radius
+        # Update learning rate and radius
         learn_rate = learn_rate_0 * np.exp(-epoch * lr_decay)
         radius_sq = radius_0 * np.exp(-epoch * radius_decay)
     return SOM
 
 
 def blad_kwant(SOM, elem):
+    min_index = 0
     first_result = sqrt(((SOM[0][0] - elem[0]) ** 2)
                         + ((SOM[1][0]) - elem[1]) ** 2)
     for i in range(len(SOM)):
         f = sqrt(((SOM[0][i] - elem[0]) ** 2) + ((SOM[1][i]) - elem[1]) ** 2)
+        # print(f)
         if f < first_result:
             first_result = f
-
+            # min_index = i
     return first_result
 
 
+# plt.xlim(-4, 4)
+# plt.ylim(-2, 2)
+# plt.show()
+# for epoch in range(0, 10, 2):
+#     SOM = train_SOM(df_neurons, df_two_combined, epochs=epoch)
+#
+#     plt.savefig(fname="wykres dla epoki " + str(epoch), dpi=300)
+# print(.1 * 4)
+
+
 if __name__ == '__main__':
-    # tu ponizej jest wywolanie glownej funkcji uczacej
-    # i tutaj wlasnie zmienia sie liczbe epok
-    SOM = train_SOM(df_neurons, df_only_one_circle, epochs=1)
 
-    fig = plt.figure()
-    ax1 = fig.add_subplot(111)
-
-    # te dwa zakomentowane ponizej dodaja na wykres
-    # inne dwa wykresy (teraz jest jeden wiekszy)
-    # ax1.scatter(df_fist_circle[0], df_fist_circle[1])
-    # ax1.scatter(df_second_circle[0], df_second_circle[1])
-    ax1.scatter(df_only_one_circle[0], df_only_one_circle[1], color='hotpink')
-    ax1.scatter(df_neurons[0], df_neurons[1], c='black')
-    plt.show()
-
-    # to zakomentowane ponizej liczy blad kwantyzacji
-    # i potem zwraca redni blad z listy
+    # fig = plt.figure()
+    # ax1 = fig.add_subplot(111)
+    # ax1.scatter(df_neurons[0], df_neurons[1], c='black')
+    #
+    # # ax1.scatter(df_fist_circle[0], df_fist_circle[1])
+    # # ax1.scatter(df_second_circle[0], df_second_circle[1])
+    # ax1.scatter(df_only_one_circle[0], df_only_one_circle[1], color='hotpink')
+    # # print(df_neurons)
+    # plt.show()
 
     # bledy = []
+    #
     # for cell in range(len(df_three_combined)):
     #     one_row = df_three_combined.iloc[cell]
     #     bledy.append(blad_kwant(df_neurons, one_row))
     #
     # df_bledy = pd.DataFrame(bledy)
+    # # print(df_bledy)
     # print(df_bledy.mean())
+    # print(bledy)
+
+    hist = pd.DataFrame()
+
+    for epoch in range(0, 26, 5):
+        SOM = train_SOM(df_neurons, df_only_one_circle, epochs=epoch)
+        bledy = []
+        for cell in range(len(df_only_one_circle)):
+            one_row = df_only_one_circle.iloc[cell]
+            bledy.append(blad_kwant(df_neurons, one_row))
+
+        df_bledy = pd.DataFrame(bledy)
+        print("blad kwantyzacji dla epoki: ", epoch)
+        print(df_bledy.mean())
+        # hist[]
+        fig = plt.figure()
+        ax1 = fig.add_subplot(111)
+        ax1.scatter(df_only_one_circle[0], df_only_one_circle[1], color='hotpink')
+        ax1.scatter(df_neurons[0], df_neurons[1], c='black')
+        plt.savefig("wykres dla eeepoki " + str(epoch), dpi=300)
+        plt.close()
