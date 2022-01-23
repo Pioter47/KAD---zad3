@@ -33,7 +33,7 @@ df_fist_circle = pd.DataFrame(list_first_circle)
 df_second_circle = pd.DataFrame(list_second_circle)
 # df_third_circle = pd.DataFrame(list_third_circle)
 
-df_two_combined = df_fist_circle.append(df_second_circle)
+df_two_combined = pd.concat([df_fist_circle, df_second_circle])
 # df_three_combined = df_two_combined.append(df_third_circle)
 
 
@@ -67,6 +67,10 @@ def find_BMU_my_second_version(SOM, elem):
     return min_index
 
 
+def len_from_p_to_p(p1_y: float, p1_x: float, p2_y: float, p2_x: float) -> float:
+    return sqrt(((p1_y - p2_y) ** 2) + (p1_x - p2_x) ** 2)
+
+
 def update_weights(SOM, train_ex, learn_rate, radius_sq,
                    BMU_index):
     # if radius is close to zero then only BMU is changed
@@ -76,9 +80,11 @@ def update_weights(SOM, train_ex, learn_rate, radius_sq,
 
     # Change all cells in a small neighborhood of BMU
     for neuron in range(len(SOM)):
-        # TODO dodaj ifa, ktory sprawdza, czy neuron jest sasiadem
-        dist_sq = sqrt(((SOM[0][neuron] - SOM[0][BMU_index]) ** 2)
-                       + ((SOM[1][neuron]) - SOM[1][BMU_index]) ** 2)
+        if radius_sq > len_from_p_to_p(SOM[0][neuron], SOM[1][neuron],
+                                       SOM[0][BMU_index], SOM[1][BMU_index]):
+            continue
+        dist_sq = len_from_p_to_p(SOM[0][neuron], SOM[1][neuron],
+                                       SOM[0][BMU_index], SOM[1][BMU_index])
         dist_func = np.exp(-dist_sq / 2 / radius_sq)
         SOM.iloc[neuron] += learn_rate * dist_func * (train_ex - SOM.iloc[neuron])
 
@@ -109,10 +115,11 @@ def train_SOM(SOM, train_data, learn_rate=.1, radius_sq=.1,
 
 def blad_kwant(SOM, elem):
     min_index = 0
-    first_result = sqrt(((SOM[0][0] - elem[0]) ** 2)
-                        + ((SOM[1][0]) - elem[1]) ** 2)
+    first_result = len_from_p_to_p(SOM[0][0], SOM[1][1],
+                                       elem[0], elem[1])
     for i in range(len(SOM)):
-        f = sqrt(((SOM[0][i] - elem[0]) ** 2) + ((SOM[1][i]) - elem[1]) ** 2)
+        f = len_from_p_to_p(SOM[0][i], SOM[1][i],
+                                       elem[0], elem[1])
         # print(f)
         if f < first_result:
             first_result = f
