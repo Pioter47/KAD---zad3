@@ -2,14 +2,6 @@
 <br />
 <div id="top"></div>
 
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -45,31 +37,36 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+This task was made for course "Data Analysis". We were given some sample data (here represented by circles)
+and we had to implement Kohenen's SOM in order to achieve basic clustering.
+In program we can choose different parameters to fit models that vary in data lenght.
+It is also possible to change circles (data) number and location.
+
+Below I presented some of the maps, that can be generated using this code:
 
 
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-## Generated maps
-### 18 neurons - correct parameters
+## Some generated maps:
+- ### 18 neurons - fitting parameters (radius: 0.15, learning rate: 0.15)
+<!-- - radius: 0.15
+- learning rate: 0.15 -->
 ![screen2](https://i.imgur.com/8WdVueq.png)
 <br />
-<br />
-### 18 neruons - to big radius chosen
+- ### 18 neruons - radius is too large (radius: 0.5, learning rate: 0.15)
+<!-- - radius: 0.5
+- learning rate: 0.15 -->
 ![screen](https://i.imgur.com/xpw2nir.png)
 <br />
-<br />
-### 8 neurons - to small learning rate
-![screen4](https://i.imgur.com/YHxS6fz.png)
-<br />
-<br />
-### 8 neurons - correct parameters
-
-
+- ### 8 neurons - correct parameters (radius: 0.15, learning rate: 0.01)
 ![screen3](https://i.imgur.com/iXVLdu9.png)
 <br />
+- ### 8 neurons - learning rate is too small (radius: 0.15, learning rate: 0.001)
+![screen4](https://i.imgur.com/YHxS6fz.png)
 <br />
+
  
 
 ## Built With
